@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Painel visual da API inteligente de orçamento">
+    <title>Budgeting AI · Assistente financeiro</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<div class="app-shell">
+    <header class="topbar">
+        <a class="brand" href="/" aria-label="Budgeting AI início">
+            <span class="brand-mark">✦</span>
+            <span>Budgeting <em>AI</em></span>
+        </a>
+        <div class="topbar-meta">
+            <span class="connection-dot" id="connectionDot"></span>
+            <span id="connectionLabel">Conectando à API...</span>
+            <a class="github-link" href="https://github.com/Vagner-Guedes/financial-assistant-api" target="_blank" rel="noreferrer">GitHub ↗</a>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero-grid">
+            <div class="hero-copy">
+                <p class="eyebrow">SEU ORÇAMENTO, MAIS INTELIGENTE</p>
+                <h1>Fale com seus gastos.<br><span>Entenda seu dinheiro.</span></h1>
+                <p class="hero-description">Registre transações, acompanhe seus períodos e use voz para conversar com seu orçamento.</p>
+                <div class="hero-actions">
+                    <a class="button button-primary" href="#new-transaction">Adicionar gasto <span>＋</span></a>
+                    <a class="text-link" href="#voice-assistant">Testar assistente <span>↓</span></a>
+                </div>
+            </div>
+
+            <aside class="setup-card" id="setup">
+                <div class="card-heading">
+                    <div>
+                        <p class="eyebrow">CONFIGURAÇÃO</p>
+                        <h2>Ative a inteligência</h2>
+                    </div>
+                    <span class="status-badge" id="assistantBadge">Verificando</span>
+                </div>
+                <p class="setup-message" id="assistantMessage">Consultando o perfil ativo...</p>
+                <form id="apiKeyForm" class="api-key-form">
+                    <label for="apiKey">Sua chave OpenAI</label>
+                    <div class="input-with-action">
+                        <input id="apiKey" type="password" autocomplete="new-password" placeholder="Cole sua chave aqui" spellcheck="false">
+                        <button class="icon-button" type="button" id="toggleKey" aria-label="Mostrar ou ocultar chave">◉</button>
+                    </div>
+                    <button class="button button-dark button-full" type="submit">Gerar comando de início <span>→</span></button>
+                </form>
+                <div class="command-box" id="commandBox" hidden>
+                    <div class="command-box-header"><span>Execute no PowerShell</span><button type="button" id="copyCommand">Copiar</button></div>
+                    <code id="startCommand"></code>
+                </div>
+                <p class="security-note"><span>▣</span> A chave não é enviada nem salva por esta página. Ela só entra no comando que você copiar.</p>
+            </aside>
+        </section>
+
+        <section class="section-block" aria-labelledby="overview-title">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">VISÃO GERAL</p>
+                    <h2 id="overview-title">Como está seu orçamento?</h2>
+                </div>
+                <button class="button button-ghost" id="refreshDashboard" type="button">↻ Atualizar</button>
+            </div>
+            <div class="stats-grid">
+                <article class="stat-card stat-card-main">
+                    <div class="stat-icon">◈</div>
+                    <div><p>Total no período</p><strong id="totalAmount">R$ 0,00</strong></div>
+                    <span class="stat-caption" id="totalCaption">Todos os lançamentos</span>
+                </article>
+                <article class="stat-card">
+                    <div class="stat-icon icon-blue">#</div>
+                    <div><p>Lançamentos</p><strong id="transactionCount">0</strong></div>
+                    <span class="stat-caption">Transações registradas</span>
+                </article>
+                <article class="stat-card">
+                    <div class="stat-icon icon-purple">⌁</div>
+                    <div><p>Categoria principal</p><strong id="topCategory">—</strong></div>
+                    <span class="stat-caption" id="topCategoryCaption">Ainda sem dados</span>
+                </article>
+            </div>
+        </section>
+
+        <section class="workspace-grid section-block">
+            <article class="panel" id="new-transaction">
+                <div class="section-heading compact">
+                    <div><p class="eyebrow">LANÇAMENTO MANUAL</p><h2>Novo gasto</h2></div>
+                    <span class="round-number">01</span>
+                </div>
+                <form id="transactionForm" class="stack-form">
+                    <label for="description">O que você pagou?</label>
+                    <input id="description" name="description" type="text" maxlength="120" placeholder="Ex.: Mercado do mês" required>
+                    <div class="form-row">
+                        <div><label for="amount">Valor</label><div class="money-input"><span>R$</span><input id="amount" name="amount" type="number" min="0.01" max="100000" step="0.01" placeholder="0,00" required></div></div>
+                        <div><label for="category">Categoria</label><select id="category" name="category" required></select></div>
+                    </div>
+                    <div><label for="occurredAt">Data</label><input id="occurredAt" name="occurredAt" type="date"></div>
+                    <button class="button button-primary button-full" type="submit">Salvar transação <span>→</span></button>
+                </form>
+            </article>
+
+            <article class="panel" id="filters">
+                <div class="section-heading compact">
+                    <div><p class="eyebrow">EXPLORAR DADOS</p><h2>Seus lançamentos</h2></div>
+                    <span class="round-number round-number-alt">02</span>
+                </div>
+                <form id="filterForm" class="stack-form">
+                    <label for="filterCategory">Filtrar por categoria</label>
+                    <select id="filterCategory"><option value="">Todas as categorias</option></select>
+                    <div class="form-row">
+                        <div><label for="from">De</label><input id="from" type="date"></div>
+                        <div><label for="to">Até</label><input id="to" type="date"></div>
+                    </div>
+                    <button class="button button-dark button-full" type="submit">Aplicar filtros <span>⌕</span></button>
+                    <button class="button button-ghost button-full" type="button" id="clearFilters">Limpar filtros</button>
+                </form>
+                <div class="filter-tip"><span>✧</span><p>Use o resumo acima para acompanhar a soma exata do período selecionado.</p></div>
+            </article>
+        </section>
+
+        <section class="table-panel section-block" aria-labelledby="transactions-title">
+            <div class="section-heading">
+                <div><p class="eyebrow">HISTÓRICO</p><h2 id="transactions-title">Transações recentes</h2></div>
+                <span class="result-count" id="resultCount">0 resultados</span>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Descrição</th><th>Categoria</th><th>Data</th><th class="align-right">Valor</th></tr></thead>
+                    <tbody id="transactionsBody"><tr><td class="empty-state" colspan="4">Carregando seus lançamentos...</td></tr></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="voice-panel section-block" id="voice-assistant" aria-labelledby="voice-title">
+            <div class="voice-copy">
+                <p class="eyebrow">MODO CONVERSA</p>
+                <h2 id="voice-title">Seu orçamento também escuta.</h2>
+                <p>Envie um áudio como “gastei 80 reais no mercado” e deixe o Spring AI interpretar, registrar e responder por você.</p>
+                <div class="voice-status-line"><span class="connection-dot" id="voiceDot"></span><span id="voiceStatusText">Verificando assistente...</span></div>
+            </div>
+            <form id="voiceForm" class="voice-form">
+                <label class="file-drop" for="audioFile">
+                    <span class="upload-icon">♬</span>
+                    <strong id="fileName">Escolha um áudio</strong>
+                    <small>MP3, M4A ou WAV · até 10 MB</small>
+                    <input id="audioFile" type="file" accept="audio/*" required>
+                </label>
+                <button class="button button-light button-full" type="submit">Processar com IA <span>✦</span></button>
+                <audio id="responseAudio" controls hidden></audio>
+                <a id="downloadAudio" class="download-link" download="assistant-response.mp3" hidden>Baixar resposta em áudio ↓</a>
+            </form>
+        </section>
+    </main>
+
+    <footer><span>Budgeting AI</span><span>Spring Boot · Spring AI · Java 17</span></footer>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="/app.js"></script>
+</body>
+</html>

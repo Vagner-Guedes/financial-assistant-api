@@ -23,6 +23,11 @@ public class AssistantController {
         this.voiceAssistant = voiceAssistant;
     }
 
+    @org.springframework.web.bind.annotation.GetMapping("/status")
+    public VoiceAssistantStatus status() {
+        return voiceAssistant.status();
+    }
+
     @PostMapping(value = "/voice", consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             produces = "audio/mpeg")
     public ResponseEntity<Resource> processVoice(@RequestParam("file") MultipartFile file) throws IOException {

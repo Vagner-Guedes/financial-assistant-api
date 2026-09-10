@@ -114,6 +114,14 @@ class TransactionControllerIntegrationTest {
                 .andExpect(status().isServiceUnavailable());
     }
 
+    @Test
+    void should_exposeAssistantStatusForTheVisualPanel() throws Exception {
+        mockMvc.perform(get("/api/assistant/status"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.mode", is("local")))
+                .andExpect(jsonPath("$.available", is(false)));
+    }
+
     private void createTransaction(String description, String amount, String category, LocalDate date)
             throws Exception {
         mockMvc.perform(post("/api/transactions")

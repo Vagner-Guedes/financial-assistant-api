@@ -38,6 +38,17 @@ Além do fluxo base de voz, esta versão evolui o projeto com:
 
 O perfil padrão é `local`. Os dados ficam em `./data/budgeting.mv.db`, que é ignorado pelo Git.
 
+### Interface visual
+
+Depois de iniciar a aplicação, abra [http://localhost:8080](http://localhost:8080). O painel permite:
+
+- cadastrar gastos sem montar JSON manualmente;
+- aplicar filtros e visualizar o resumo financeiro;
+- enviar áudio para o assistente quando o perfil `openai` estiver ativo;
+- informar a chave no campo visual e copiar o comando correto para iniciar o perfil OpenAI.
+
+Por segurança, a tela não envia nem salva a chave. Ela apenas monta o comando local para o PowerShell; a aplicação precisa ser reiniciada com o perfil `openai` depois que a chave for configurada.
+
 Para habilitar o fluxo de voz com OpenAI, defina a chave na sessão atual e ative o perfil:
 
 ```powershell

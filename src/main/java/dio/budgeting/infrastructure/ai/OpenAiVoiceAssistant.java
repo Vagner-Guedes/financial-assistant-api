@@ -36,6 +36,12 @@ public class OpenAiVoiceAssistant implements VoiceAssistant {
     }
 
     @Override
+    public VoiceAssistantStatus status() {
+        return new VoiceAssistantStatus("openai", true,
+                "Assistente de voz ativo com transcrição, tools e síntese de áudio.");
+    }
+
+    @Override
     public VoiceAssistantResponse process(Resource audio) {
         try {
             var transcript = transcriptionModel.call(audio);

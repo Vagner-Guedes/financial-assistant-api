@@ -4,4 +4,6 @@ import org.springframework.core.io.Resource;
 
 public interface VoiceAssistant {
     VoiceAssistantResponse process(Resource audio);
+
+    VoiceAssistantStatus status();
 }
