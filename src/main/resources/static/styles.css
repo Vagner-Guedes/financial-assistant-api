@@ -125,6 +125,20 @@ td:first-child { color: var(--ink); font-weight: 700; }
 .voice-status-line { display: flex; gap: 10px; align-items: center; color: #c8eee7; font-size: 11px; }
 .voice-status-line .connection-dot { background: #b9f0d1; box-shadow: 0 0 0 4px rgba(185, 240, 209, .14); }
 .voice-form { padding: 20px; border-radius: 17px; background: rgba(7, 77, 72, .25); }
+.recording-tools { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.record-button { min-height: 43px; display: inline-flex; align-items: center; gap: 9px; border: 1px solid rgba(255, 255, 255, .42); border-radius: 11px; padding: 0 14px; color: var(--white); background: rgba(255, 255, 255, .11); cursor: pointer; font-size: 11px; font-weight: 700; transition: background .2s, transform .2s, border .2s; }
+.record-button:hover { transform: translateY(-2px); background: rgba(255, 255, 255, .18); }
+.record-button:disabled { opacity: .48; cursor: not-allowed; transform: none; }
+.record-button.recording { border-color: #ffd6cd; background: #b85754; animation: recordingPulse 1.5s infinite; }
+.record-button-icon { width: 10px; height: 10px; display: grid; place-items: center; color: #ffb3a8; font-size: 15px; line-height: 1; }
+.record-button.recording .record-button-icon { color: #fff; }
+.recording-timer { min-width: 45px; color: #d3f5ed; font-family: Consolas, monospace; font-size: 12px; text-align: right; }
+.recording-help { margin: 11px 0 13px; color: #b8e8df; font-size: 10px; line-height: 1.45; }
+.recording-help.recording { color: #ffe1d9; }
+.voice-divider { display: flex; align-items: center; gap: 10px; margin: 15px 0; color: #a5d9d0; font-size: 9px; text-transform: uppercase; letter-spacing: .12em; }
+.voice-divider::before, .voice-divider::after { content: ''; height: 1px; flex: 1; background: rgba(255, 255, 255, .2); }
+.voice-form audio { width: 100%; height: 37px; margin-top: 14px; }
+.voice-form #recordingPreview { margin-top: 0; }
 .file-drop { min-height: 130px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px; margin: 0; border: 1px dashed rgba(255, 255, 255, .48); border-radius: 13px; color: var(--white); cursor: pointer; text-align: center; }
 .file-drop:hover { background: rgba(255, 255, 255, .08); }
 .file-drop input { display: none; }
@@ -132,8 +146,8 @@ td:first-child { color: var(--ink); font-weight: 700; }
 .file-drop strong { max-width: 90%; overflow: hidden; text-overflow: ellipsis; font-size: 12px; white-space: nowrap; }
 .file-drop small { color: #b8e8df; font-size: 10px; }
 .voice-form .button { margin-top: 13px; }
-.voice-form audio { width: 100%; height: 37px; margin-top: 14px; }
 .download-link { display: block; margin-top: 11px; color: #d6fff5; font-size: 10px; font-weight: 700; text-align: center; }
+@keyframes recordingPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(255, 174, 165, .3); } 50% { box-shadow: 0 0 0 6px rgba(255, 174, 165, 0); } }
 
 footer { display: flex; justify-content: space-between; margin-top: 45px; color: #9aa7ab; font-size: 10px; }
 .toast { position: fixed; right: 25px; bottom: 25px; z-index: 10; max-width: 330px; padding: 14px 17px; border-radius: 11px; color: var(--white); background: var(--navy); box-shadow: var(--shadow); font-size: 12px; opacity: 0; pointer-events: none; transform: translateY(13px); transition: opacity .2s, transform .2s; }

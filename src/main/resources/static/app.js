@@ -8,6 +8,16 @@ const categories = [
 ];
 
 const $ = (selector) => document.querySelector(selector);
+let mediaRecorder;
+let microphoneStream;
+let recordingChunks = [];
+let recordingInterval;
+let recordingStartedAt;
+let recordedBlob;
+let recordingFileExtension = 'webm';
+let recordingPreviewUrl;
+let responseAudioUrl;
+
 const api = (path, options) => fetch(path, options).then(async (response) => {
     const contentType = response.headers.get('content-type') || '';
     const body = contentType.includes('application/json') ? await response.json() : await response.blob();
@@ -132,11 +142,89 @@ async function loadAssistantStatus() {
             ? 'Assistente pronto para ouvir seu comando.'
             : 'Ative o perfil openai para usar o modo de voz.';
         $('#voiceDot').className = `connection-dot ${status.available ? 'online' : 'offline'}`;
+        $('#recordButton').disabled = !status.available;
+        if (!status.available) {
+            $('#recordingHelp').textContent = 'A gravação será liberada quando o perfil openai estiver ativo.';
+        }
     } catch (error) {
         $('#assistantBadge').textContent = 'Indisponível';
         $('#assistantBadge').className = 'status-badge error';
         $('#assistantMessage').textContent = 'Não foi possível consultar o status da IA.';
     }
+}
+
+function supportedRecordingType() {
+    const types = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus'];
+    return types.find((type) => window.MediaRecorder?.isTypeSupported(type)) || '';
+}
+
+function updateRecordingUi(isRecording) {
+    const button = $('#recordButton');
+    button.classList.toggle('recording', isRecording);
+    $('#recordButtonLabel').textContent = isRecording ? 'Parar gravação' : 'Gravar pelo microfone';
+    $('#recordingHelp').textContent = isRecording
+        ? 'Gravando... fale naturalmente e clique para encerrar.'
+        : 'O navegador pedirá permissão para acessar seu microfone.';
+    $('#recordingHelp').classList.toggle('recording', isRecording);
+}
+
+function updateRecordingTimer() {
+    const elapsed = Math.floor((Date.now() - recordingStartedAt) / 1000);
+    const minutes = String(Math.floor(elapsed / 60)).padStart(2, '0');
+    const seconds = String(elapsed % 60).padStart(2, '0');
+    $('#recordingTimer').textContent = `${minutes}:${seconds}`;
+    if (elapsed >= 60) stopRecording();
+}
+
+async function startRecording() {
+    if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
+        showToast('Seu navegador não oferece gravação de microfone.', true);
+        return;
+    }
+    try {
+        microphoneStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const mimeType = supportedRecordingType();
+        mediaRecorder = mimeType ? new MediaRecorder(microphoneStream, { mimeType }) : new MediaRecorder(microphoneStream);
+        recordingFileExtension = mimeType.includes('ogg') ? 'ogg' : 'webm';
+        recordingChunks = [];
+        mediaRecorder.addEventListener('dataavailable', (event) => {
+            if (event.data.size > 0) recordingChunks.push(event.data);
+        });
+        mediaRecorder.addEventListener('stop', () => {
+            recordedBlob = new Blob(recordingChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+            if (recordingPreviewUrl) URL.revokeObjectURL(recordingPreviewUrl);
+            recordingPreviewUrl = URL.createObjectURL(recordedBlob);
+            $('#recordingPreview').src = recordingPreviewUrl;
+            $('#recordingPreview').hidden = false;
+            $('#fileName').textContent = 'Gravação do microfone pronta';
+            $('#audioFile').value = '';
+            if (microphoneStream) microphoneStream.getTracks().forEach((track) => track.stop());
+            microphoneStream = undefined;
+            showToast('Gravação pronta. Clique em Processar com IA.');
+        });
+        mediaRecorder.start();
+        recordingStartedAt = Date.now();
+        recordingInterval = window.setInterval(updateRecordingTimer, 250);
+        updateRecordingUi(true);
+    } catch (error) {
+        if (microphoneStream) microphoneStream.getTracks().forEach((track) => track.stop());
+        microphoneStream = undefined;
+        showToast('Permita o acesso ao microfone no navegador para gravar.', true);
+    }
+}
+
+function stopRecording() {
+    if (!mediaRecorder || mediaRecorder.state === 'inactive') return;
+    mediaRecorder.stop();
+    window.clearInterval(recordingInterval);
+    recordingInterval = undefined;
+    $('#recordingTimer').textContent = '00:00';
+    updateRecordingUi(false);
+}
+
+function toggleRecording() {
+    if (mediaRecorder?.state === 'recording') stopRecording();
+    else startRecording();
 }
 
 async function createTransaction(event) {
@@ -179,15 +267,20 @@ function prepareCommand(event) {
 async function processVoice(event) {
     event.preventDefault();
     const file = $('#audioFile').files[0];
-    if (!file) return;
+    const source = recordedBlob || file;
+    if (!source) {
+        showToast('Grave pelo microfone ou escolha um arquivo de áudio.', true);
+        return;
+    }
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('file', source, recordedBlob ? `microphone.${recordingFileExtension}` : file.name);
     try {
         const result = await api('/api/assistant/voice', { method: 'POST', body: formData });
-        const audioUrl = URL.createObjectURL(result);
-        $('#responseAudio').src = audioUrl;
+        if (responseAudioUrl) URL.revokeObjectURL(responseAudioUrl);
+        responseAudioUrl = URL.createObjectURL(result);
+        $('#responseAudio').src = responseAudioUrl;
         $('#responseAudio').hidden = false;
-        $('#downloadAudio').href = audioUrl;
+        $('#downloadAudio').href = responseAudioUrl;
         $('#downloadAudio').hidden = false;
         showToast('Comando processado. Ouça a resposta da IA.');
     } catch (error) {
@@ -214,9 +307,20 @@ document.addEventListener('DOMContentLoaded', () => {
         showToast('Comando copiado.');
     });
     $('#audioFile').addEventListener('change', (event) => {
+        recordedBlob = undefined;
+        if (recordingPreviewUrl) URL.revokeObjectURL(recordingPreviewUrl);
+        $('#recordingPreview').hidden = true;
         $('#fileName').textContent = event.target.files[0]?.name || 'Escolha um áudio';
     });
+    $('#recordButton').addEventListener('click', toggleRecording);
     $('#voiceForm').addEventListener('submit', processVoice);
     loadAssistantStatus();
     loadDashboard();
+});
+
+window.addEventListener('beforeunload', () => {
+    if (mediaRecorder?.state === 'recording') mediaRecorder.stop();
+    if (microphoneStream) microphoneStream.getTracks().forEach((track) => track.stop());
+    if (recordingPreviewUrl) URL.revokeObjectURL(recordingPreviewUrl);
+    if (responseAudioUrl) URL.revokeObjectURL(responseAudioUrl);
 });

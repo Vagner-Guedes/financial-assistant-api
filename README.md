@@ -44,10 +44,12 @@ Depois de iniciar a aplicação, abra [http://localhost:8080](http://localhost:8
 
 - cadastrar gastos sem montar JSON manualmente;
 - aplicar filtros e visualizar o resumo financeiro;
-- enviar áudio para o assistente quando o perfil `openai` estiver ativo;
+- gravar diretamente pelo microfone ou enviar áudio para o assistente quando o perfil `openai` estiver ativo;
 - informar a chave no campo visual e copiar o comando correto para iniciar o perfil OpenAI.
 
 Por segurança, a tela não envia nem salva a chave. Ela apenas monta o comando local para o PowerShell; a aplicação precisa ser reiniciada com o perfil `openai` depois que a chave for configurada.
+
+O botão de gravação usa a permissão de microfone do navegador e funciona em `localhost` ou em uma página HTTPS. A gravação é mantida apenas em memória até ser enviada pelo botão `Processar com IA`.
 
 Para habilitar o fluxo de voz com OpenAI, defina a chave na sessão atual e ative o perfil:
 

@@ -143,11 +143,21 @@
                 <div class="voice-status-line"><span class="connection-dot" id="voiceDot"></span><span id="voiceStatusText">Verificando assistente...</span></div>
             </div>
             <form id="voiceForm" class="voice-form">
+                <div class="recording-tools">
+                    <button class="record-button" id="recordButton" type="button">
+                        <span class="record-button-icon">●</span>
+                        <span id="recordButtonLabel">Gravar pelo microfone</span>
+                    </button>
+                    <span class="recording-timer" id="recordingTimer">00:00</span>
+                </div>
+                <p class="recording-help" id="recordingHelp">O navegador pedirá permissão para acessar seu microfone.</p>
+                <audio id="recordingPreview" controls hidden></audio>
+                <div class="voice-divider"><span>ou envie um arquivo</span></div>
                 <label class="file-drop" for="audioFile">
                     <span class="upload-icon">♬</span>
                     <strong id="fileName">Escolha um áudio</strong>
                     <small>MP3, M4A ou WAV · até 10 MB</small>
-                    <input id="audioFile" type="file" accept="audio/*" required>
+                    <input id="audioFile" type="file" accept="audio/*">
                 </label>
                 <button class="button button-light button-full" type="submit">Processar com IA <span>✦</span></button>
                 <audio id="responseAudio" controls hidden></audio>
